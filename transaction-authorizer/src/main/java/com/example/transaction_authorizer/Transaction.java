@@ -1,6 +1,6 @@
 package com.example.transaction_authorizer;
 
-public class Transaction () {
+public class Transaction {
     private String id;
     private String accountId;
     private double amount;
@@ -13,6 +13,17 @@ public class Transaction () {
         this.amount = amount;
         this.merchant = merchant;
         this.mcc = mcc;
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "id='" + id + '\'' +
+                ", accountId='" + accountId + '\'' +
+                ", amount=" + amount +
+                ", merchant='" + merchant + '\'' +
+                ", mcc='" + mcc + '\'' +
+                '}';
     }
 
     public String getId() {
@@ -55,14 +66,5 @@ public class Transaction () {
         this.mcc = mcc;
     }
 
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "id='" + id + '\'' +
-                ", accountId='" + accountId + '\'' +
-                ", amount=" + amount +
-                ", merchant='" + merchant + '\'' +
-                ", mcc='" + mcc + '\'' +
-                '}';
-    }
+
 }
