@@ -6,6 +6,7 @@ public class Transaction {
     private double amount;
     private String merchant;
     private String mcc;
+    private Long version;
 
     public Transaction(String id, String accountId, double amount, String merchant, String mcc) {
         this.id = id;
@@ -66,5 +67,12 @@ public class Transaction {
         this.mcc = mcc;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
 }
