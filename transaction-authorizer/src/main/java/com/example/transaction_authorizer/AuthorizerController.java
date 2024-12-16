@@ -12,14 +12,15 @@ public class AuthorizerController {
     private double foodBalance = 1000.0;
     private double mealBalance = 500.0;
     private double cashBalance = 2000.0;
+
     private Map<String, String> merchantCategoryMap = new HashMap<>();
+
     public AuthorizerController() {
         merchantCategoryMap.put("UBER EATS", "MEAL");
         merchantCategoryMap.put("UBER TRIP", "CASH");
         merchantCategoryMap.put("PAG*JoseDaSilva", "CASH");
         merchantCategoryMap.put("PICPAY*BILHETEUNICO", "CASH");
     }
-
 
     @PostMapping("/authorize")
     public ResponseEntity<String> authorize(@RequestBody Transaction transaction) {

@@ -6,7 +6,6 @@ public class Transaction {
     private double amount;
     private String merchant;
     private String mcc;
-    private Long version;
 
     public Transaction(String id, String accountId, double amount, String merchant, String mcc) {
         this.id = id;
@@ -14,17 +13,6 @@ public class Transaction {
         this.amount = amount;
         this.merchant = merchant;
         this.mcc = mcc;
-    }
-
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "id='" + id + '\'' +
-                ", accountId='" + accountId + '\'' +
-                ", amount=" + amount +
-                ", merchant='" + merchant + '\'' +
-                ", mcc='" + mcc + '\'' +
-                '}';
     }
 
     public String getId() {
@@ -67,12 +55,14 @@ public class Transaction {
         this.mcc = mcc;
     }
 
-    public Long getVersion() {
-        return version;
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "id='" + id + '\'' +
+                ", accountId='" + accountId + '\'' +
+                ", amount=" + amount +
+                ", merchant='" + merchant + '\'' +
+                ", mcc='" + mcc + '\'' +
+                '}';
     }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
 }
