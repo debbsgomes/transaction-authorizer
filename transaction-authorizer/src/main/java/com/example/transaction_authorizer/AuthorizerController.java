@@ -1,5 +1,10 @@
 package com.example.transaction_authorizer;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -9,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Objects;
 
 @RestController
+@Tag(name = "Transaction Authorizer", description = "API for authorizing transactions based on merchant category and available balance")
 public class AuthorizerController {
     private static final Logger logger = LoggerFactory.getLogger(AuthorizerController.class);
     private static final long TIMEOUT_THRESHOLD = 100;
@@ -28,6 +35,24 @@ public class AuthorizerController {
         merchantCategoryMap.put("PICPAY*BILHETEUNICO", "CASH");
     }
 
+    @Operation(
+            summary = "Authorize a transaction",
+            description = "Authorizes a transaction based on the merchant category and available balance. " +
+                    "Supports FOOD, MEAL, and CASH categories with automatic fallback to CASH.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Transaction processed successfully",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(example = "{\"code\": \"00\"}"))),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error or transaction timeout",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(example = "Transaction failed after multiple retries")))
+            }
+    )
+
     @PostMapping("/authorize")
     public ResponseEntity<String> authorize(@RequestBody Transaction transaction) {
         try {
@@ -40,10 +65,15 @@ public class AuthorizerController {
 
             String benefitCategory = merchantCategoryMap.getOrDefault(transaction.getMerchant(), null);
             if (benefitCategory == null) {
-                if (transaction.getMcc().equals("5411") || transaction.getMcc().equals("5412")) {
-                    benefitCategory = "FOOD";
-                } else if (transaction.getMcc().equals("5811") || transaction.getMcc().equals("5812")) {
-                    benefitCategory = "MEAL";
+                String mcc = transaction.getMcc();
+                if (mcc != null) {
+                    if (Objects.equals(mcc, "5411") || Objects.equals(mcc, "5412")) {
+                        benefitCategory = "FOOD";
+                    } else if (Objects.equals(mcc, "5811") || Objects.equals(mcc, "5812")) {
+                        benefitCategory = "MEAL";
+                    } else {
+                        benefitCategory = "CASH";
+                    }
                 } else {
                     benefitCategory = "CASH";
                 }
@@ -105,7 +135,8 @@ public class AuthorizerController {
             return authorize(transaction);
         } else {
             logger.error("Max retry count reached for transaction {}", transaction.getId());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Transaction failed after multiple retries");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Transaction failed after multiple retries");
         }
     }
 
