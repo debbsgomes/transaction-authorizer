@@ -13,6 +13,8 @@ import java.util.HashMap;
 @RestController
 public class AuthorizerController {
     private static final Logger logger = LoggerFactory.getLogger(AuthorizerController.class);
+    private static final long TIMEOUT_THRESHOLD = 100;
+    private static final int MAX_RETRY_COUNT = 3;
 
     private double foodBalance = 1000.0;
     private double mealBalance = 500.0;
@@ -30,6 +32,11 @@ public class AuthorizerController {
     public ResponseEntity<String> authorize(@RequestBody Transaction transaction) {
         try {
             logger.info("Received transaction request: {}", transaction);
+
+            if (isTransactionTimedOut(transaction)) {
+                logger.warn("Transaction {} timed out", transaction.getId());
+                return retryTransaction(transaction);
+            }
 
             String benefitCategory = merchantCategoryMap.getOrDefault(transaction.getMerchant(), null);
             if (benefitCategory == null) {
@@ -75,5 +82,34 @@ public class AuthorizerController {
             logger.error("Error occurred while processing transaction", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
         }
+    }
+
+    private boolean isTransactionTimedOut(Transaction transaction) {
+        long currentTime = System.currentTimeMillis();
+        long transactionTime = transaction.getTimestamp();
+        return (currentTime - transactionTime) > TIMEOUT_THRESHOLD;
+    }
+
+    private ResponseEntity<String> retryTransaction(Transaction transaction) {
+        int retryCount = transaction.getRetryCount();
+        if (retryCount < MAX_RETRY_COUNT) {
+            long backoffTime = calculateBackoffTime(retryCount);
+            logger.info("Retrying transaction {} after {} ms", transaction.getId(), backoffTime);
+            try {
+                Thread.sleep(backoffTime);
+            } catch (InterruptedException e) {
+                logger.error("Retry interrupted for transaction {}", transaction.getId(), e);
+                Thread.currentThread().interrupt();
+            }
+            transaction.incrementRetryCount();
+            return authorize(transaction);
+        } else {
+            logger.error("Max retry count reached for transaction {}", transaction.getId());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Transaction failed after multiple retries");
+        }
+    }
+
+    private long calculateBackoffTime(int retryCount) {
+        return (long) Math.pow(2, retryCount) * 100;
     }
 }

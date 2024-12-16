@@ -6,6 +6,8 @@ public class Transaction {
     private double amount;
     private String merchant;
     private String mcc;
+    private long timestamp;
+    private int retryCount;
 
     public Transaction(String id, String accountId, double amount, String merchant, String mcc) {
         this.id = id;
@@ -13,6 +15,8 @@ public class Transaction {
         this.amount = amount;
         this.merchant = merchant;
         this.mcc = mcc;
+        this.timestamp = System.currentTimeMillis();
+        this.retryCount = 0;
     }
 
     public String getId() {
@@ -54,6 +58,17 @@ public class Transaction {
     public void setMcc(String mcc) {
         this.mcc = mcc;
     }
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void incrementRetryCount() {
+        retryCount++;
+    }
 
     @Override
     public String toString() {
@@ -63,6 +78,8 @@ public class Transaction {
                 ", amount=" + amount +
                 ", merchant='" + merchant + '\'' +
                 ", mcc='" + mcc + '\'' +
+                ", timestamp=" + timestamp +
+                ", retryCount=" + retryCount +
                 '}';
     }
 }
